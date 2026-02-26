@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2015", // <- ✅ REQUIRED
+    // "lib": ["ES2015", "DOM"], // <- also good to include
+    // "downlevelIteration": true,
+
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
+  }
+}
