@@ -3,6 +3,9 @@ import type { UserType } from "../types/index";
 
 import { apiService } from "./apiService";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const ApiService = new apiService();
 
 type Room = {
@@ -44,20 +47,21 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
           const room = rooms.get(roomId)!;
 
           const existing = room.users.get(currentUser.id);
-          if (existing) {
+          if (!existing) {
+            room.users.set(currentUser.id, {
+              user: currentUser,
+              ws,
+              typing: false,
+            });
+
             console.warn(
-              `Replacing existing connection for user: ${currentUser.name}`,
+              `Added user: ${currentUser.name} to room id: ${roomId} `,
             );
-            existing.ws.close();
-            room.users.delete(currentUser.id);
+          } else {
+            console.warn(
+              `Using user: ${currentUser.name} current session in room id: ${roomId} `,
+            );
           }
-
-          room.users.set(currentUser.id, {
-            user: currentUser,
-            ws,
-            typing: false,
-          });
-
           break;
         case "ping":
           send(ws, "pong", { type: "pong" });
@@ -81,6 +85,10 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
             );
 
             room.users.delete(userId); //user is logged out
+            if (!room.users.size) {
+              rooms.delete(roomId);
+            }
+
             break;
           }
         }
@@ -103,28 +111,39 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
     const others = Array.from(room.users.values()).filter(
       (c) => c.user.id !== user.id,
     );
-    if (others.length) {
+    if (!others.length) {
       console.error("❌ Partner is not online");
 
       //send push notification
-      const response = await ApiService.sendPostRequest("/push-notification", {
+      try {
+        const response = await ApiService.sendPostRequest(
+          "/push-chat-notification",
+          {
+            room_id: roomId,
+            body: message,
+            user_id: user.id,
+          },
+        );
+        console.log("Push notifcation: ", response);
+      } catch (error) {
+        console.log("error: ", error);
+      }
+    }
+
+    try {
+      //save message
+      const response = await ApiService.sendPostRequest("/log-message", {
         room_id: roomId,
         body: message,
         user_id: user.id,
       });
-      console.log("Push notifcation: ", response);
+
+      console.log("Save message: ", response);
+      send(ws, "messaged", response);
+      broadcast(others, "newMessage", response);
+    } catch (error) {
+      console.log("error: ", error);
     }
-
-    //save message
-    const response = await ApiService.sendPostRequest("/notifications", {
-      room_id: roomId,
-      body: message,
-      user_id: user.id,
-    });
-    console.log("Save message: ", response);
-
-    send(ws, "messaged", response);
-    broadcast(others, "newMessage", response);
   };
 
   const onTyping = async (event: any, ws: WebSocket) => {

@@ -1,10 +1,10 @@
 {
-  "name": "streaming",
+  "name": "aibenmart-node",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cross-env DEBUG=mediasoup:* ts-node src/index.ts"
+    "dev": "ts-node src/index.ts"
   },
   "author": "Divine John",
   "license": "MIT",
@@ -16,7 +16,6 @@
     "dotenv": "^17.0.0",
     "express": "^5.1.0",
     "httpolyglot": "^0.1.2",
-    "mediasoup": "^3.16.1",
     "ws": "^8.18.2"
   },
   "devDependencies": {

@@ -17,6 +17,7 @@ export class apiService {
   async sendPostRequest<T>(endpoint: string, payload: any): Promise<T> {
     try {
       const response = await this.client.post<T>(endpoint, payload);
+      console.log("res", response.data);
       return response.data;
     } catch (error: any) {
       console.error(
