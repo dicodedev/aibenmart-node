@@ -25,4 +25,4 @@ jobs:
             pwd
             sudo git pull
             sudo npm install
-            sudo pm2 restart qataloog
+            sudo pm2 restart aibenmart-node
