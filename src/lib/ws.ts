@@ -20,6 +20,21 @@ type Client = {
 
 const rooms = new Map<number, Room>();
 
+const notifcations = {
+  appected: {
+    title: "",
+    body: "",
+    data: {},
+    image: null,
+  },
+  paid: {
+    title: "",
+    body: "",
+    data: {},
+    image: null,
+  },
+};
+
 const WebsocketConnection = async (websock: WebSocket.Server) => {
   websock.on("connection", (ws: WebSocket) => {
     let currentUser: UserType;
@@ -69,7 +84,20 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
         case "message":
           onMessage(event, ws);
           break;
+        case "accept-ride":
+          sendSingleMessage(event, ws, "accepted");
+          break;
+        case "decline-ride":
+          sendSingleMessage(event, ws, "declined");
+          break;
+        case "payment":
+          sendSingleMessage(event, ws, "paid");
+          break;
         case "typing":
+          // onTyping(event, ws);
+          break;
+        case "stoppedTyping":
+          // onTyping(event, ws);
           break;
         default:
           break;
@@ -146,7 +174,87 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
     }
   };
 
-  const onTyping = async (event: any, ws: WebSocket) => {
+  //  const onTyping = async (event: any, ws: WebSocket) => {
+  //    const { roomId, user, message } = event;
+
+  //    const room = rooms.get(roomId)!;
+  //    if (!room) return;
+
+  //    const client = room.users.get(user.id);
+  //    if (!client) {
+  //      console.error("❌ No user found", user.name);
+  //      return;
+  //    }
+
+  //    const others = Array.from(room.users.values()).filter(
+  //      (c) => c.user.id !== user.id,
+  //    );
+  //    if (!others.length) {
+  //      console.error("❌ Partner is not online");
+
+  //      //send push notification
+  //      try {
+  //        const response = await ApiService.sendPostRequest(
+  //          "/push-chat-notification",
+  //          {
+  //            room_id: roomId,
+  //            body: message,
+  //            user_id: user.id,
+  //          },
+  //        );
+  //        console.log("Push notifcation: ", response);
+  //      } catch (error) {
+  //        console.log("error: ", error);
+  //      }
+  //    }
+
+  //    try {
+  //      //save message
+  //      const response = await ApiService.sendPostRequest("/log-message", {
+  //        room_id: roomId,
+  //        body: message,
+  //        user_id: user.id,
+  //      });
+
+  //      console.log("Save message: ", response);
+  //      send(ws, "messaged", response);
+  //      broadcast(others, "newMessage", response);
+  //    } catch (error) {
+  //      console.log("error: ", error);
+  //    }
+  //  };
+
+  // const onTyping = async (event: any, ws: WebSocket) => {
+  //   const { roomId, user } = event;
+
+  //   const room = rooms.get(roomId)!;
+  //   if (!room) return;
+
+  //   const client = room.users.get(user.id);
+  //   if (!client) {
+  //     console.error("❌ No user found", user.name);
+  //     return;
+  //   }
+
+  //   const others = Array.from(room.users.values()).filter(
+  //     (c) => c.user.id !== user.id,
+  //   );
+  //   if (others.length) {
+  //     console.error("❌ Partner is not online");
+  //   }
+
+  //   //save message
+  //   const resp = {};
+
+  //   send(ws, "messaged", resp);
+  //   broadcast(others, "newMessage", resp);
+  // };
+
+  const sendSingleMessage = async (
+    event: any,
+    ws: WebSocket,
+    message: string,
+  ) => {
     const { roomId, user } = event;
 
     const room = rooms.get(roomId)!;
@@ -161,15 +269,27 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
     const others = Array.from(room.users.values()).filter(
       (c) => c.user.id !== user.id,
     );
-    if (others.length) {
+    if (!others.length) {
       console.error("❌ Partner is not online");
+
+      //send push notification
+      // try {
+      //   const response = await ApiService.sendPostRequest(
+      //     "/push-notification",
+      //     {
+      //       title: "",
+      //       body: "",
+      //       image: null,
+      //       data: {},
+      //     },
+      //   );
+      //   console.log("Push notifcation: ", response);
+      // } catch (error) {
+      //   console.log("error: ", error);
+      // }
+    } else {
+      broadcast(others, message, {});
     }
-
-    //save message
-    const resp = {};
-
-    send(ws, "messaged", resp);
-    broadcast(others, "newMessage", resp);
   };
 
   const IsJsonString = (str: string) => {
