@@ -93,6 +93,9 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
         case "payment":
           sendSingleMessage(event, ws, "paid");
           break;
+        case "location-change":
+          onLocationChange(event, ws);
+          break;
         case "typing":
           // onTyping(event, ws);
           break;
@@ -174,81 +177,39 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
     }
   };
 
-  //  const onTyping = async (event: any, ws: WebSocket) => {
-  //    const { roomId, user, message } = event;
+  const onLocationChange = async (event: any, ws: WebSocket) => {
+    const { roomId, user, cordinates } = event;
 
-  //    const room = rooms.get(roomId)!;
-  //    if (!room) return;
+    const room = rooms.get(roomId)!;
+    if (!room) return;
 
-  //    const client = room.users.get(user.id);
-  //    if (!client) {
-  //      console.error("❌ No user found", user.name);
-  //      return;
-  //    }
+    const client = room.users.get(user.id);
+    if (!client) {
+      console.error("❌ No user found", user.name);
+      return;
+    }
 
-  //    const others = Array.from(room.users.values()).filter(
-  //      (c) => c.user.id !== user.id,
-  //    );
-  //    if (!others.length) {
-  //      console.error("❌ Partner is not online");
+    const others = Array.from(room.users.values()).filter(
+      (c) => c.user.id !== user.id,
+    );
+    if (others.length) {
+      // try {
+      //   //save message
+      //   const response = await ApiService.sendPostRequest("/log-message", {
+      //     room_id: roomId,
+      //     body: message,
+      //     user_id: user.id,
+      //   });
 
-  //      //send push notification
-  //      try {
-  //        const response = await ApiService.sendPostRequest(
-  //          "/push-chat-notification",
-  //          {
-  //            room_id: roomId,
-  //            body: message,
-  //            user_id: user.id,
-  //          },
-  //        );
-  //        console.log("Push notifcation: ", response);
-  //      } catch (error) {
-  //        console.log("error: ", error);
-  //      }
-  //    }
+      //   // send(ws, "messaged", response);
+      //   broadcast(others, "newLocation", response);
+      // } catch (error) {
+      //   console.log("error: ", error);
+      // }
 
-  //    try {
-  //      //save message
-  //      const response = await ApiService.sendPostRequest("/log-message", {
-  //        room_id: roomId,
-  //        body: message,
-  //        user_id: user.id,
-  //      });
-
-  //      console.log("Save message: ", response);
-  //      send(ws, "messaged", response);
-  //      broadcast(others, "newMessage", response);
-  //    } catch (error) {
-  //      console.log("error: ", error);
-  //    }
-  //  };
-
-  // const onTyping = async (event: any, ws: WebSocket) => {
-  //   const { roomId, user } = event;
-
-  //   const room = rooms.get(roomId)!;
-  //   if (!room) return;
-
-  //   const client = room.users.get(user.id);
-  //   if (!client) {
-  //     console.error("❌ No user found", user.name);
-  //     return;
-  //   }
-
-  //   const others = Array.from(room.users.values()).filter(
-  //     (c) => c.user.id !== user.id,
-  //   );
-  //   if (others.length) {
-  //     console.error("❌ Partner is not online");
-  //   }
-
-  //   //save message
-  //   const resp = {};
-
-  //   send(ws, "messaged", resp);
-  //   broadcast(others, "newMessage", resp);
-  // };
+      broadcast(others, "newLocation", cordinates);
+    }
+  };
 
   const sendSingleMessage = async (
     event: any,
