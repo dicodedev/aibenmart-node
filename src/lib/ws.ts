@@ -62,21 +62,21 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
           const room = rooms.get(roomId)!;
 
           const existing = room.users.get(currentUser.id);
-          if (!existing) {
-            room.users.set(currentUser.id, {
-              user: currentUser,
-              ws,
-              typing: false,
-            });
+          if (existing) {
+            room.users.delete(currentUser.id);
 
             console.warn(
-              `Added user: ${currentUser.name} to room id: ${roomId} `,
-            );
-          } else {
-            console.warn(
-              `Using user: ${currentUser.name} current session in room id: ${roomId} `,
+              `Deleted user: ${currentUser.name} current session from room id: ${roomId} `,
             );
           }
+
+          room.users.set(currentUser.id, {
+            user: currentUser,
+            ws,
+            typing: false,
+          });
+
+          console.log(`Added user: ${currentUser.name} to room id: ${roomId} `);
           break;
         case "ping":
           send(ws, "pong", { type: "pong" });
