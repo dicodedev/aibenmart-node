@@ -65,7 +65,7 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
           if (existing) {
             room.users.delete(currentUser.id);
 
-            console.warn(
+            console.log(
               `Deleted user: ${currentUser.name} current session from room id: ${roomId} `,
             );
           }
