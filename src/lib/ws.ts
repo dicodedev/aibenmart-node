@@ -84,6 +84,9 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
         case "message":
           onMessage(event, ws);
           break;
+        case "data":
+          onData(event, ws);
+          break;
         case "accept-ride":
           sendSingleMessage(event, ws, "accepted");
           break;
@@ -175,6 +178,26 @@ const WebsocketConnection = async (websock: WebSocket.Server) => {
     } catch (error) {
       console.log("error: ", error);
     }
+  };
+
+  const onData = async (event: any, ws: WebSocket) => {
+    const { roomId, user, data } = event;
+
+    const room = rooms.get(roomId)!;
+    if (!room) return;
+
+    const client = room.users.get(user.id);
+    if (!client) {
+      console.error("❌ No user found", user.name);
+      return;
+    }
+
+    const others = Array.from(room.users.values()).filter(
+      (c) => c.user.id !== user.id,
+    );
+
+    send(ws, "dataSent", data);
+    broadcast(others, "newData", data);
   };
 
   const onLocationChange = async (event: any, ws: WebSocket) => {
